@@ -36,7 +36,6 @@ public class Phrase implements Model {
 			st.executeUpdate(insert);
 			conexion.close();
 		}catch(SQLException e) {
-			conexion.close();
 			System.err.println(e);
 		}
 	}
