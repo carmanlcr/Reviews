@@ -14,6 +14,7 @@ import com.selenium.reviews.interfaces.Model;
 
 public class Phrase implements Model {
 
+	private final String TABLE_NAME = "phrases";
 	private int phrases_id;
 	private String phrase;
 	private boolean active;
@@ -30,10 +31,13 @@ public class Phrase implements Model {
 		setCreated_at(dateFormat.format(date));
 		
 		try {
-			String insert = "INSERT INTO phrases(phrase,created_at,campaings_id) VALUE "
+			String insert = "INSERT INTO "+TABLE_NAME+"(phrase,created_at,campaings_id) VALUE "
 					+ " ('"+getPhrase()+"','"+getCreated_at()+"',"+getCampaings_id()+");";
-			st = (Statement) conexion.createStatement();
-			st.executeUpdate(insert);
+			PreparedStatement exe = conexion.prepareStatement(insert);
+			exe.setString(1, getPhrase());
+			exe.setString(2, getCreated_at());
+			exe.setInt(3, getCampaings_id());
+			exe.executeUpdate();
 			conexion.close();
 		}catch(SQLException e) {
 			System.err.println(e);
@@ -48,7 +52,7 @@ public String getPhraseRandom() throws SQLException{
 		ResultSet rs = null;
 		try {
 			
-			String queryExce = "SELECT ph.phrase FROM phrases ph "
+			String queryExce = "SELECT ph.phrase FROM "+TABLE_NAME+" ph "
 					+ "WHERE ph.active = ? AND ph.campaings_id = ? "
 					+ "ORDER BY RAND() LIMIT 1;";
 			PreparedStatement  query = (PreparedStatement) conexion.prepareStatement(queryExce);

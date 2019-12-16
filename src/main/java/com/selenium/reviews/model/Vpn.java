@@ -16,6 +16,7 @@ import com.selenium.reviews.interfaces.Model;
 
 public class Vpn implements Model{
 
+	private final String TABLE_NAME ="vpn";
 	private int vpn_id;
 	private String name;
 	private boolean activo;
@@ -34,7 +35,7 @@ public class Vpn implements Model{
 			st = (Statement) conexion.createStatement();
 			
 			
-			rs = st.executeQuery("SELECT name FROM vpn WHERE active = 1 ORDER BY name ASC");
+			rs = st.executeQuery("SELECT name FROM "+TABLE_NAME+" WHERE active = 1 ORDER BY name ASC");
 			
 			list.add("Seleccione");
 			while (rs.next() ) {
@@ -59,7 +60,7 @@ public class Vpn implements Model{
 			st = (Statement) conexion.createStatement();
 			
 			
-			rs = st.executeQuery("SELECT * FROM vpn WHERE name = '"+nameVpn+"';");
+			rs = st.executeQuery("SELECT * FROM "+TABLE_NAME+" WHERE name = '"+nameVpn+"';");
 			
 			while (rs.next() ) {
 				nameVpn = rs.getString("name");
@@ -85,7 +86,7 @@ public class Vpn implements Model{
 		try {
 			
 			st = (Statement) conexion.createStatement();
-			String query = "SELECT * FROM vpn WHERE name = '"+name+"';";
+			String query = "SELECT * FROM "+TABLE_NAME+" WHERE name = '"+name+"';";
 			
 			rs = st.executeQuery(query);
 			
@@ -113,7 +114,7 @@ public class Vpn implements Model{
 		Connection conexion = conn.conectar();
 		try {
 			
-			String queryExce = "SELECT name FROM vpn WHERE vpn_id = ?;";
+			String queryExce = "SELECT name FROM "+TABLE_NAME+" WHERE vpn_id = ?;";
 			PreparedStatement  query = (PreparedStatement) conexion.prepareStatement(queryExce);
 			query.setInt(1, getVpn_id());
 			rs = query.executeQuery();
@@ -141,7 +142,7 @@ public class Vpn implements Model{
 		try {
 			
 			st = (Statement) conexion.createStatement();
-			String query = "SELECT * FROM vpn WHERE UPPER(name) = '"+name.toUpperCase()+"';";
+			String query = "SELECT * FROM "+TABLE_NAME+" WHERE UPPER(name) = '"+name.toUpperCase()+"';";
 			
 			rs = st.executeQuery(query);
 			
@@ -165,13 +166,15 @@ public class Vpn implements Model{
 	}
 	
 	public void insert() {
-		Statement st = null;
 		Connection conexion = conn.conectar();
 
 		try {
-			String insert = "INSERT INTO vpn(name,created_at) VALUES ('"+getName()+"','"+getCreated_at()+"');";
-			st = (Statement) conexion.createStatement();
-			st.executeUpdate(insert);
+			String insert = "INSERT INTO "+TABLE_NAME+"(name,created_at) "
+					+ "VALUES (?,?);";
+			PreparedStatement exe = conexion.prepareStatement(insert);
+			exe.setString(1, getName());
+			exe.setString(2, getCreated_at());
+			exe.executeUpdate();
 			conexion.close();
 		} catch(SQLException e)  {
 			System.err.println(e);

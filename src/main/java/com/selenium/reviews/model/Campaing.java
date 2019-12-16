@@ -4,17 +4,18 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.mysql.jdbc.Statement;
 import com.selenium.reviews.interfaces.Model;
 
 public class Campaing implements Model {
 	
+	private final String TABLE_NAME ="campaings";
 	private int campaings_id;
 	private String link;
 	private String name;
@@ -30,10 +31,14 @@ public class Campaing implements Model {
 		setCreated_at(dateFormat.format(date));
 		Connection conexion = conn.conectar();
 		try {
-			String insert = "INSERT INTO campaings(link,name,created_at) "
-					+ " VALUE ('"+getLink()+"', '"+getName()+"', '"+getCreated_at()+"');";
-			st = (Statement) conexion.createStatement();
-			st.executeUpdate(insert);
+			String insert = "INSERT INTO "+TABLE_NAME+"(link,name,created_at) "
+					+ " VALUE (?);";
+			PreparedStatement exe = conexion.prepareStatement(insert);
+			exe.setString(1, getLink());
+			exe.setString(2, getName());
+			exe.setString(3, getCreated_at());
+			
+			exe.executeUpdate();
 			conexion.close();
 		}catch(SQLException e) {
 			System.err.println(e);
@@ -45,8 +50,8 @@ public class Campaing implements Model {
 		Connection conexion = conn.conectar();
 		ResultSet rs;
 		try {
-			String queryExce = "SELECT * FROM reviews.campaings ca " + 
-					"INNER JOIN reviews.phrases ph ON ca.campaings_id = ph.campaings_id AND ph.active = ? "
+			String queryExce = "SELECT * FROM "+TABLE_NAME+" ca " + 
+					"INNER JOIN phrases ph ON ca.campaings_id = ph.campaings_id AND ph.active = ? "
 					+"WHERE ca.active = ?;";
 			PreparedStatement  query = (PreparedStatement) conexion.prepareStatement(queryExce);
 			query.setInt(1, 1);
@@ -82,7 +87,7 @@ public class Campaing implements Model {
 		Connection conexion = conn.conectar();
 		ResultSet rs;
 		try {
-			String queryExce = "SELECT * FROM reviews.campaings ca " 
+			String queryExce = "SELECT * FROM "+TABLE_NAME+" ca " 
 					+"WHERE ca.active = ?;";
 			PreparedStatement  query = (PreparedStatement) conexion.prepareStatement(queryExce);
 			query.setInt(1, 1);
@@ -117,7 +122,7 @@ public class Campaing implements Model {
 		Connection conexion = conn.conectar();
 		try {
 			
-			String queryExce = "SELECT ca.campaings_id FROM campaings ca " + 
+			String queryExce = "SELECT ca.campaings_id FROM "+TABLE_NAME+" ca " + 
 					"LEFT JOIN posts pt ON pt.campaings_id = ca.campaings_id AND DATE(pt.created_at) = ? " + 
 					"WHERE ca.campaings_id NOT IN ("+values+") " + 
 					"GROUP BY ca.campaings_id " + 

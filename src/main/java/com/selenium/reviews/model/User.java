@@ -16,6 +16,7 @@ import com.selenium.reviews.interfaces.Model;
 
 public class User implements Model {
 	
+	private final String TABLE_NAME = "users";
 	private int users_id;
 	private String email;
 	private String password;
@@ -33,7 +34,7 @@ public class User implements Model {
 		setCreated_at(dateFormatTimeStamp.format(date));
 		Connection conexion = conn.conectar();
 		try {
-			String insert = "INSERT INTO users(email,password,vpn_id,created_at) "
+			String insert = "INSERT INTO "+TABLE_NAME+"(email,password,vpn_id,created_at) "
 					+ " VALUE (?,?,?,?);";
 			PreparedStatement  query = (PreparedStatement) conexion.prepareStatement(insert);
 			query.setString(1, getEmail());
@@ -57,7 +58,7 @@ public class User implements Model {
 		Date twoDaysAgo = c.getTime();
 		
 		try {
-			String queryExce = "SELECT * FROM users us " + 
+			String queryExce = "SELECT * FROM "+TABLE_NAME+" us " + 
 					"WHERE NOT EXISTS (SELECT 1 FROM posts pt WHERE pt.users_id = us.users_id " + 
 					"AND DATE(pt.created_at) BETWEEN ? AND ?) " + 
 					"AND us.active = ?;";

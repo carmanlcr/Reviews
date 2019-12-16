@@ -15,7 +15,8 @@ import java.util.List;
 import com.selenium.reviews.interfaces.Model;
 
 public class Post implements Model {
-	
+
+	private final String TABLE_NAME ="posts";
 	private int posts_id;
 	private int users_id;
 	private int campaings_id;
@@ -30,10 +31,15 @@ public class Post implements Model {
 		setCreated_at(dateFormat.format(date));
 		Connection conexion = conn.conectar();
 		try {
-			String insert = "INSERT INTO posts(users_id,campaings_id,created_at) "
-					+ " VALUE ("+getUsers_id()+", "+getCampaings_id()+",'"+getCreated_at()+"');";
-			st = (Statement) conexion.createStatement();
-			st.executeUpdate(insert);
+			String insert = "INSERT INTO "+TABLE_NAME+"(users_id,campaings_id,created_at) "
+					+ " VALUE (?,?,?);";
+			PreparedStatement exe = conexion.prepareStatement(insert);
+			exe.setInt(1, getUsers_id());
+			exe.setInt(2,getCampaings_id());
+			exe.setString(3, getCreated_at());
+			
+			exe.executeUpdate();
+			
 
 			conexion.close();
 		}catch(SQLException e) {
@@ -49,7 +55,7 @@ public class Post implements Model {
 		Date twoDaysAgo = c.getTime();
 		try {
 			String queryExce = "SELECT * FROM users us " + 
-					"WHERE EXISTS (SELECT 1 FROM posts pt WHERE pt.users_id = us.users_id " + 
+					"WHERE EXISTS (SELECT 1 FROM "+TABLE_NAME+" pt WHERE pt.users_id = us.users_id " + 
 					"AND DATE(pt.created_at) BETWEEN ? AND ? " + 
 					"AND pt.users_id = ?) " + 
 					"AND us.active = 1 LIMIT 1;";
@@ -75,7 +81,7 @@ public class Post implements Model {
 		Connection conexion = conn.conectar();
 		
 		try {
-			String queryExce = "SELECT DISTINCT(ca.campaings_id) as tareas FROM posts pt " + 
+			String queryExce = "SELECT DISTINCT(ca.campaings_id) as tareas FROM "+TABLE_NAME+" pt " + 
 					"INNER JOIN campaings ca ON ca.campaings_id = pt.campaings_id " + 
 					"WHERE pt.users_id = ?;";
 	
