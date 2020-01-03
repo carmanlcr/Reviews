@@ -5,15 +5,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import org.openqa.selenium.ElementClickInterceptedException;
 import org.openqa.selenium.ElementNotInteractableException;
 
 import com.selenium.reviews.model.Campaing;
-import com.selenium.reviews.model.Phrase;
 import com.selenium.reviews.model.Post;
+import com.selenium.reviews.model.Task;
 import com.selenium.reviews.model.User;
 import com.selenium.reviews.model.Vpn;
 
@@ -21,22 +21,22 @@ import com.selenium.reviews.model.Vpn;
 public class InicioController {
 	
 	private List<User> usuarios;
+	private List<Task> tareas;
 	private static DriverController drive = null;
 	private static VpnController vpn = new VpnController();
 	private RobotClickController robot;
 	private boolean banderaVpn = false;
-	public InicioController(List<User> usuarios) {
+	
+	public InicioController(List<User> usuarios,List<Task> listTask) {
 		this.usuarios = usuarios;
+		this.tareas = listTask;
 	}
 	
-	
 	public void init() throws InterruptedException {
-		List<Campaing> listCampaings = new ArrayList<Campaing>();
-		Campaing camp = new Campaing();
-		listCampaings = camp.getAllActiveWithPhrase();
 		
-		for(int i = 0; i<listCampaings.size(); i++) {
+		for(int i = 0; i<tareas.size(); i++) {
 			drive = null;
+			Collections.shuffle(usuarios);
 			for(int j = 0; j<usuarios.size();) {
 				Post post = new Post();
 				post.setUsers_id(usuarios.get(j).getUsers_id());
@@ -75,43 +75,23 @@ public class InicioController {
 						IniciaSesion inicioSesion = new IniciaSesion(drive, usuarios.get(j).getEmail(), usuarios.get(j).getPassword());
 						
 						if(inicioSesion.init()) {
-							if(drive.searchElement(1, "//*[text()[contains(.,'Verifica tu identidad')]]") != 0) {
-								System.out.println("Usuario bloqueado");
-								i--;
-
-							}else if(drive.searchElement(1, "//*[text()[contains(.,'Verifica que eres tú')]]") != 0) {
-								System.out.println("Usuario pide verificación");
-								i--;
-							}else {
-								Post pos = new Post();
+							if(!validateUserBlock()) {
 								post.setUsers_id(usuarios.get(j).getUsers_id());
-								String values = "";
-								List<Integer> lis = pos.getAllPostUser();
-								if (lis.isEmpty()) {
-									values = "0";
-								} else {
-									for (int k = 0; k < lis.size(); k++) {
-										if (k != lis.size() - 1) {
-											values += lis.get(k) + ",";
-										} else {
-											values += lis.get(k);
-										}
-									}
-								}
 								
-								int idCampa = camp.getCampaingDiferent(values);
-								String link = "";
-								String nameCategoria = "";
-								for(Campaing ca : listCampaings) {
-									if(ca.getCampaings_id() == idCampa) {
-										link += ca.getLink();
-										nameCategoria += ca.getName();
-										usuarios.remove(j);
-										break;
+								if(drive.searchElement(1, "/html/body/c-wiz[2]/c-wiz/div/div[1]/div/div/div/div[2]/div[3]/div/div[2]/div") != 0
+									|| drive.searchElement(1, "//*[text()[contains(.,'Confirmar')]]") != 0
+									|| drive.searchElement(1, "//*[text()[contains(.,'Proteger tu cuenta')]]") != 0) {
+									try {
+										drive.clickButton(1, "/html/body/c-wiz[2]/c-wiz/div/div[1]/div/div/div/div[2]/div[3]/div/div[2]/div", "Confirmar");
+									}catch (ElementClickInterceptedException e) {
+										drive.clickButton(1, "//*[text()[contains(.,'Confirmar')]]", "Confirmar");
 									}
 								}
 								robot = new RobotClickController();
-								drive.goPage(link);
+								Campaing campa = new Campaing();
+								campa.setCampaings_id(tareas.get(i).getCampaings_id());
+								campa = campa.getCampaing();
+								drive.goPage(campa.getLink());
 								Thread.sleep(1450);
 								if(drive.searchElement(1, "wrl") != 0) {
 									drive.clickButton(1, "wrl", "Escribir una opinion id");
@@ -123,45 +103,38 @@ public class InicioController {
 									}
 								}
 								
-								Phrase frase = new Phrase();
-								frase.setCampaings_id(idCampa);
-								try {
-									String fra = frase.getPhraseRandom();
-									Thread.sleep(2540);
-									writePhrase(fra);
-									
-									Thread.sleep(2500);
-									
-									clickStartAndPublic();
-									
-									Thread.sleep(1490);
-									
-									robot.pressEsc();
-									
-									post.setCampaings_id(idCampa);
-									post.insert();
-									
-									System.out.println("El usuario publico correctamente");
-									Thread.sleep(2540);
-									
-									//Presionar la tecla escape
-									robot.pressEsc();
-									
-									Thread.sleep(2546);
-									
-									
-								} catch (SQLException e) {
-									System.out.println("No se encontro una frase para la categoría "+nameCategoria);
-								}
+
+								Thread.sleep(2540);
+								writePhrase(tareas.get(i).getComentario());
 								
+								Thread.sleep(2500);
 								
-							}//Fin del if de cuenta bloqueada
+								clickStartAndPublic();
 								
+								Thread.sleep(1490);
+								
+								robot.pressEsc();
+								
+								post.setCampaings_id(tareas.get(i).getCampaings_id());
+								post.setTasks_id(tareas.get(i).getTasks_id());
+								post.insert();
+								
+								System.out.println("El usuario publico correctamente");
+								Thread.sleep(2540);
+								
+								//Presionar la tecla escape
+								robot.pressEsc();
+								
+								Thread.sleep(2546);
 									
 							}else {
-								System.out.println("El usuario "+usuarios.get(j).getEmail()+" tiene error de usuario o contraseña");
 								i--;
-							}//Fin del if usuario o contraseña correcto o incorrecto
+							}//Fin del if de cuenta bloqueada
+								
+						}else {
+							System.out.println("El usuario "+usuarios.get(j).getEmail()+" tiene error de usuario o contraseña");
+							i--;
+						}//Fin del if usuario o contraseña correcto o incorrecto
 							
 						}//La cuenta no es correcta
 						
@@ -178,10 +151,21 @@ public class InicioController {
 					banderaVpn = true;
 					usuarios.remove(j);
 					break;
-				}//Fin del if usuario que hizo publicaciones
-			}//Fin del for usuarios
-		}//Fin del for Campañas
+				}//Fin del for usuarios 
+			}//Fin del for Campañas
+		System.out.println("Todas las publicaciones se hicieron correctamente");
+		}//Fin de la funcion
 	
+	private boolean validateUserBlock() {
+		if(drive.searchElement(1, "//*[text()[contains(.,'Verifica tu identidad')]]") != 0) {
+			System.out.println("Usuario bloqueado");
+			return true;
+		}else if(drive.searchElement(1, "//*[text()[contains(.,'Verifica que eres tú')]]") != 0) {
+			System.out.println("Usuario pide verificación");
+			return true;
+		}
+		return false;
+	}
 	private void writePhrase(String frase) throws InterruptedException {
 		robot.dimensions(450, 530);
 		Thread.sleep(2303);

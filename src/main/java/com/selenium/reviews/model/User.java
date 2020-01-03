@@ -32,17 +32,16 @@ public class User implements Model {
 	
 	public void insert() throws SQLException{
 		setCreated_at(dateFormatTimeStamp.format(date));
-		Connection conexion = conn.conectar();
-		try {
-			String insert = "INSERT INTO "+TABLE_NAME+"(email,password,vpn_id,created_at) "
-					+ " VALUE (?,?,?,?);";
-			PreparedStatement  query = (PreparedStatement) conexion.prepareStatement(insert);
+		String insert = "INSERT INTO "+TABLE_NAME+"(email,password,vpn_id,created_at) "
+				+ " VALUE (?,?,?,?);";
+		try (Connection conexion = conn.conectar();
+				PreparedStatement  query = conexion.prepareStatement(insert);){
+			
 			query.setString(1, getEmail());
 			query.setString(2, getPassword());
 			query.setInt(3,getVpn_id());
 			query.setString(4,getCreated_at());
 			query.executeUpdate();
-			conexion.close();
 		}catch(SQLException e) {
 			System.err.println(e);
 		}
@@ -51,21 +50,29 @@ public class User implements Model {
 	
 	public List<User> getUsers(){
 		List<User> listU = new ArrayList<User>();
-		Connection conexion = conn.conectar();
+		
 		Calendar c = Calendar.getInstance();
 		Date now = c.getTime();
-		c.add(Calendar.DAY_OF_MONTH, -2);
+		c.add(Calendar.DAY_OF_MONTH, -5);
 		Date twoDaysAgo = c.getTime();
-		
-		try {
-			String queryExce = "SELECT * FROM "+TABLE_NAME+" us " + 
-					"WHERE NOT EXISTS (SELECT 1 FROM posts pt WHERE pt.users_id = us.users_id " + 
-					"AND DATE(pt.created_at) BETWEEN ? AND ?) " + 
-					"AND us.active = ?;";
-			PreparedStatement  query = (PreparedStatement) conexion.prepareStatement(queryExce);
+		String queryExce = "SELECT * FROM " + 
+				"(SELECT us.users_id, us.email, us.password,us.active, us.vpn_id, pt.campaings_id FROM users us " + 
+				"LEFT JOIN posts pt ON pt.users_id = us.users_id AND DATE(pt.created_at) BETWEEN ? AND ? " + 
+				"WHERE us.active = 1) us " + 
+				"LEFT JOIN " + 
+				"(SELECT campaings_id FROM reviews.tasks " + 
+				"WHERE date_publication = ? " +
+			    "GROUP BY campaings_id " + 
+				"HAVING count(*) > 0) ta " + 
+				"ON ta.campaings_id = us.campaings_id " + 
+				"WHERE ta.campaings_id is null;";
+		try (Connection conexion = conn.conectar();
+				PreparedStatement  query = conexion.prepareStatement(queryExce);){
+			
+			
 			query.setString(1, dateFormat.format(twoDaysAgo));
 			query.setString(2, dateFormat.format(now));
-			query.setInt(3, 1);
+			query.setString(3, dateFormat.format(now));
 			
 			rs = query.executeQuery();
 			
@@ -79,7 +86,6 @@ public class User implements Model {
 				listU.add(u);
 			}
 			
-			conexion.close();
 		}catch(SQLException e) {
 			
 		}

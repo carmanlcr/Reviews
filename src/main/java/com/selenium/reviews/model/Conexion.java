@@ -13,18 +13,17 @@ public class Conexion {
 
     public Connection connect = null;
 
-    @SuppressWarnings("finally")
     public Connection conectar() {
         try {
-        	Class.forName("com.mysql.cj.jdbc.Driver");
-            connect = (Connection) DriverManager.getConnection(URL + BD, USER, PASSWORD);
+        	Class.forName("com.mysql.jdbc.Driver");
+            connect = (Connection) DriverManager.getConnection(URL + BD+"?useSSL=false", USER, PASSWORD);
             
         }catch(SQLException e1) {
         	System.err.println("Error al conectarse a la base de datos "+e1);
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            return connect;
         }
+        
+        return connect;
     }
 }

@@ -19,6 +19,7 @@ import com.selenium.reviews.model.Campaing;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.awt.event.ActionEvent;
+import javax.swing.JCheckBox;
 
 public class RegisterCampaing {
 
@@ -55,7 +56,7 @@ public class RegisterCampaing {
 		frmRegistrarCampaa = new JFrame();
 		frmRegistrarCampaa.setResizable(false);
 		frmRegistrarCampaa.setTitle("Registrar Campa\u00F1a");
-		frmRegistrarCampaa.setBounds(100, 100, 455, 392);
+		frmRegistrarCampaa.setBounds(100, 100, 455, 434);
 		
 		JLabel lblCampaa = new JLabel("Campa\u00F1a");
 		lblCampaa.setFont(new Font("Arial", Font.PLAIN, 12));
@@ -70,6 +71,7 @@ public class RegisterCampaing {
 		textArea.setRows(20);
 		textArea.setLineWrap(true);
 		textArea.setTabSize(1);
+		final JCheckBox checkIsCampaign = new JCheckBox("");
 		
 		JButton btnNewButton = new JButton("Registrar");
 		btnNewButton.addActionListener(new ActionListener() {
@@ -80,10 +82,16 @@ public class RegisterCampaing {
 					Campaing campa = new Campaing();
 					campa.setName(textField.getText());
 					campa.setLink(textArea.getText());
+					if(checkIsCampaign.isSelected()) {
+						campa.setCampaing(true);
+					}else {
+						campa.setCampaing(false);
+					}
 					try {
 						campa.insert();
 						textField.setText("");
 						textArea.setText("");
+						checkIsCampaign.setSelected(false);
 						JOptionPane.showMessageDialog(null, "Campaña agregada con exito","Extio",JOptionPane.INFORMATION_MESSAGE);
 					} catch (SQLException e) {
 						JOptionPane.showMessageDialog(null, "Error al agregar campaña","Failed",JOptionPane.ERROR_MESSAGE);
@@ -93,6 +101,11 @@ public class RegisterCampaing {
 				
 			}
 		});
+		
+		
+		
+		JLabel lblCampaa_1 = new JLabel("Es Campa\u00F1a");
+		lblCampaa_1.setFont(new Font("Arial", Font.PLAIN, 12));
 		GroupLayout groupLayout = new GroupLayout(frmRegistrarCampaa.getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -102,17 +115,22 @@ public class RegisterCampaing {
 							.addGap(31)
 							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
 								.addGroup(groupLayout.createSequentialGroup()
-									.addComponent(lblLink, GroupLayout.PREFERRED_SIZE, 78, GroupLayout.PREFERRED_SIZE)
-									.addGap(18)
-									.addComponent(textArea, GroupLayout.PREFERRED_SIZE, 250, GroupLayout.PREFERRED_SIZE))
-								.addGroup(groupLayout.createSequentialGroup()
 									.addComponent(lblCampaa, GroupLayout.PREFERRED_SIZE, 78, GroupLayout.PREFERRED_SIZE)
 									.addGap(18)
-									.addComponent(textField))))
+									.addComponent(textField))
+								.addGroup(groupLayout.createSequentialGroup()
+									.addComponent(lblCampaa_1, GroupLayout.PREFERRED_SIZE, 78, GroupLayout.PREFERRED_SIZE)
+									.addGap(18)
+									.addComponent(checkIsCampaign)
+									.addGap(243))
+								.addGroup(groupLayout.createSequentialGroup()
+									.addComponent(lblLink, GroupLayout.PREFERRED_SIZE, 78, GroupLayout.PREFERRED_SIZE)
+									.addGap(18)
+									.addComponent(textArea, GroupLayout.PREFERRED_SIZE, 264, GroupLayout.PREFERRED_SIZE))))
 						.addGroup(groupLayout.createSequentialGroup()
 							.addGap(159)
 							.addComponent(btnNewButton)))
-					.addContainerGap(57, Short.MAX_VALUE))
+					.addContainerGap(58, Short.MAX_VALUE))
 		);
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -121,11 +139,15 @@ public class RegisterCampaing {
 					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
 						.addComponent(lblCampaa)
 						.addComponent(textField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-					.addGap(50)
-					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
+					.addGap(29)
+					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
 						.addComponent(lblLink, GroupLayout.PREFERRED_SIZE, 15, GroupLayout.PREFERRED_SIZE)
-						.addComponent(textArea, GroupLayout.PREFERRED_SIZE, 166, GroupLayout.PREFERRED_SIZE))
-					.addPreferredGap(ComponentPlacement.RELATED, 22, Short.MAX_VALUE)
+						.addComponent(textArea, GroupLayout.PREFERRED_SIZE, 206, GroupLayout.PREFERRED_SIZE))
+					.addGap(18)
+					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+						.addComponent(lblCampaa_1, GroupLayout.PREFERRED_SIZE, 15, GroupLayout.PREFERRED_SIZE)
+						.addComponent(checkIsCampaign))
+					.addPreferredGap(ComponentPlacement.RELATED, 39, Short.MAX_VALUE)
 					.addComponent(btnNewButton)
 					.addContainerGap())
 		);

@@ -4,7 +4,6 @@ import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 
 import com.selenium.reviews.model.Campaing;
 import com.selenium.reviews.model.Phrase;
@@ -16,6 +15,7 @@ import javax.swing.JOptionPane;
 
 import java.awt.Font;
 import javax.swing.JTextArea;
+import javax.swing.border.EmptyBorder;
 import javax.swing.JComboBox;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
@@ -23,6 +23,16 @@ import java.sql.SQLException;
 import java.util.List;
 import java.awt.event.ActionEvent;
 
+/**
+ * 
+ * Clase deprecada, el registro de la frase se hace directamente en la tarea 
+ * y no como metodo independiente
+ * 
+ * @deprecated
+ * @author Luis Morales
+ * @version 1.0.0
+ *
+ */
 public class RegisterPhrase extends JFrame {
 
 	/**

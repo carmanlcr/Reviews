@@ -27,22 +27,18 @@ public class Vpn implements Model{
 	
 	public List<String> getAllActive() {
 
-		Connection conexion = conn.conectar();
+		
 		List<String> list = new ArrayList<String>();
-		Statement st = null;
 	    ResultSet rs = null;
-		try {
-			st = (Statement) conexion.createStatement();
-			
+		try (Connection conexion = conn.conectar();
+				Statement  st = (Statement) conexion.createStatement();){
 			
 			rs = st.executeQuery("SELECT name FROM "+TABLE_NAME+" WHERE active = 1 ORDER BY name ASC");
 			
 			list.add("Seleccione");
 			while (rs.next() ) {
 				list.add(rs.getString("name"));
-               
 			}
-			conexion.close();
 		}catch(SQLException e) {
 			System.err.println(e);
 		}
@@ -52,12 +48,10 @@ public class Vpn implements Model{
 	
 	public String getNameVPN(String name) throws SQLException {
 		String nameVpn = "";
-		Statement st = null;
 		ResultSet rs = null;
-		Connection conexion = conn.conectar();
-		try {
-			
-			st = (Statement) conexion.createStatement();
+		
+		try (Connection conexion = conn.conectar();
+				Statement st = (Statement) conexion.createStatement();){
 			
 			
 			rs = st.executeQuery("SELECT * FROM "+TABLE_NAME+" WHERE name = '"+nameVpn+"';");
@@ -69,9 +63,6 @@ public class Vpn implements Model{
 			conexion.close();
 		}catch(Exception e) {
 			System.err.println(e);
-		}finally{
-			st.close();
-			conexion.close();
 		}
 		
 		return nameVpn;
@@ -81,11 +72,11 @@ public class Vpn implements Model{
 	public int getFind(String name) throws SQLException {
 		int idVpn = 0;
 		ResultSet rs = null;
-		Statement st = null;
-		Connection conexion = conn.conectar();
-		try {
+		
+		try (Connection conexion = conn.conectar();
+				Statement st = (Statement) conexion.createStatement();){
 			
-			st = (Statement) conexion.createStatement();
+			
 			String query = "SELECT * FROM "+TABLE_NAME+" WHERE name = '"+name+"';";
 			
 			rs = st.executeQuery(query);
@@ -97,9 +88,6 @@ public class Vpn implements Model{
 			conexion.close();
 		}catch(Exception e) {
 			System.err.println(e);
-		}finally {
-			rs.close();
-			conexion.close();
 		}
 			
 		
@@ -111,11 +99,11 @@ public class Vpn implements Model{
 		String idVpn = "";
 		ResultSet rs = null;
 		setCreated_at(dateFormat.format(date));
-		Connection conexion = conn.conectar();
-		try {
+		String queryExce = "SELECT name FROM "+TABLE_NAME+" WHERE vpn_id = ?;";
+		
+		try (Connection conexion = conn.conectar();
+				PreparedStatement  query = conexion.prepareStatement(queryExce);){
 			
-			String queryExce = "SELECT name FROM "+TABLE_NAME+" WHERE vpn_id = ?;";
-			PreparedStatement  query = (PreparedStatement) conexion.prepareStatement(queryExce);
 			query.setInt(1, getVpn_id());
 			rs = query.executeQuery();
 			
@@ -123,7 +111,6 @@ public class Vpn implements Model{
 				idVpn = rs.getString("name");
                
 			}
-			conexion.close();
 			return idVpn;
 		}catch(SQLException e) {
 			System.err.println(e);
@@ -137,11 +124,10 @@ public class Vpn implements Model{
 	public int findOrCreate(String name) throws SQLException {
 		int idVpn = 0;
 		ResultSet rs = null;
-		Statement st = null;
-		Connection conexion = conn.conectar();
-		try {
+		
+		try (Connection conexion = conn.conectar();
+				Statement st = (Statement) conexion.createStatement();){
 			
-			st = (Statement) conexion.createStatement();
 			String query = "SELECT * FROM "+TABLE_NAME+" WHERE UPPER(name) = '"+name.toUpperCase()+"';";
 			
 			rs = st.executeQuery(query);
@@ -152,9 +138,6 @@ public class Vpn implements Model{
 			}
 		}catch(Exception e) {
 			System.err.println(e);
-		}finally {
-			rs.close();
-			conexion.close();
 		}
 			
 		if(idVpn==0) {
@@ -166,22 +149,19 @@ public class Vpn implements Model{
 	}
 	
 	public void insert() {
-		Connection conexion = conn.conectar();
-
-		try {
-			String insert = "INSERT INTO "+TABLE_NAME+"(name,created_at) "
-					+ "VALUES (?,?);";
-			PreparedStatement exe = conexion.prepareStatement(insert);
+	
+		String insert = "INSERT INTO "+TABLE_NAME+"(name,created_at) "
+				+ "VALUES (?,?);";
+		try (Connection conexion = conn.conectar();
+				PreparedStatement exe = conexion.prepareStatement(insert);){
+			
 			exe.setString(1, getName());
 			exe.setString(2, getCreated_at());
 			exe.executeUpdate();
-			conexion.close();
 		} catch(SQLException e)  {
 			System.err.println(e);
 		}
-			
 
-		
 	}
 	
 	

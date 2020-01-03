@@ -11,7 +11,14 @@ import java.util.Date;
 
 import com.selenium.reviews.interfaces.Model;
 
-
+/**
+ * 
+ * Clase deprecada, ya que la frase ahora va como tarea y no como independiente.
+ * 
+ * @deprecated
+ * @author Usuario
+ *
+ */
 public class Phrase implements Model {
 
 	private final String TABLE_NAME = "phrases";
@@ -27,35 +34,34 @@ public class Phrase implements Model {
 	ResultSet rs;
 	
 	public void insert() throws SQLException {
-		Connection conexion = conn.conectar();
-		setCreated_at(dateFormat.format(date));
 		
-		try {
-			String insert = "INSERT INTO "+TABLE_NAME+"(phrase,created_at,campaings_id) VALUE "
-					+ " ('"+getPhrase()+"','"+getCreated_at()+"',"+getCampaings_id()+");";
-			PreparedStatement exe = conexion.prepareStatement(insert);
+		setCreated_at(dateFormat.format(date));
+		String insert = "INSERT INTO "+TABLE_NAME+"(phrase,created_at,campaings_id) VALUE "
+				+ " (?,?,?);";
+		try (Connection conexion = conn.conectar();
+				PreparedStatement exe = conexion.prepareStatement(insert);){
+			
+			
 			exe.setString(1, getPhrase());
 			exe.setString(2, getCreated_at());
 			exe.setInt(3, getCampaings_id());
 			exe.executeUpdate();
-			conexion.close();
 		}catch(SQLException e) {
 			System.err.println(e);
 		}
 	}
 	
-public String getPhraseRandom() throws SQLException{
+	public String getPhraseRandom() throws SQLException{
 		
 		String list = "";
-		Connection conexion = conn.conectar();
-		Statement st = (Statement) conexion.createStatement();
+		String queryExce = "SELECT ph.phrase FROM "+TABLE_NAME+" ph "
+				+ "WHERE ph.active = ? AND ph.campaings_id = ? "
+				+ "ORDER BY RAND() LIMIT 1;";
+		
 		ResultSet rs = null;
-		try {
+		try (Connection conexion = conn.conectar();
+				PreparedStatement  query = conexion.prepareStatement(queryExce);){
 			
-			String queryExce = "SELECT ph.phrase FROM "+TABLE_NAME+" ph "
-					+ "WHERE ph.active = ? AND ph.campaings_id = ? "
-					+ "ORDER BY RAND() LIMIT 1;";
-			PreparedStatement  query = (PreparedStatement) conexion.prepareStatement(queryExce);
 			query.setInt(1, 1);
 			query.setInt(2, getCampaings_id());
 			rs = query.executeQuery();
@@ -65,9 +71,6 @@ public String getPhraseRandom() throws SQLException{
 			}
 		}catch(Exception e) {
 			System.err.println(e);
-		}finally {
-			st.close();
-			conexion.close();
 		}
 		
 		return list;

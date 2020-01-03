@@ -20,53 +20,54 @@ public class Post implements Model {
 	private int posts_id;
 	private int users_id;
 	private int campaings_id;
+	private int tasks_id;
 	private String created_at;
 	private Date date = new Date();
-	private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd H:m:s");
+	private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private static Conexion conn = new Conexion();
 	
 	Statement st;
 	ResultSet rs;
 	public void insert() {
 		setCreated_at(dateFormat.format(date));
-		Connection conexion = conn.conectar();
-		try {
-			String insert = "INSERT INTO "+TABLE_NAME+"(users_id,campaings_id,created_at) "
-					+ " VALUE (?,?,?);";
-			PreparedStatement exe = conexion.prepareStatement(insert);
+		String insert = "INSERT INTO "+TABLE_NAME+"(users_id,campaings_id,tasks_id,created_at) "
+				+ " VALUE (?,?,?,?);";
+		try (Connection conexion = conn.conectar();
+				PreparedStatement exe = conexion.prepareStatement(insert);){
+			
+			
 			exe.setInt(1, getUsers_id());
 			exe.setInt(2,getCampaings_id());
-			exe.setString(3, getCreated_at());
+			exe.setInt(3, getTasks_id());
+			exe.setString(4, getCreated_at());
 			
 			exe.executeUpdate();
-			
 
-			conexion.close();
 		}catch(SQLException e) {
 			System.err.println(e);
 		}
 	}
 
 	public boolean getUserPost() {
-		Connection conexion = conn.conectar();
+		
 		Calendar c = Calendar.getInstance();
 		Date now = c.getTime();
 		c.add(Calendar.DAY_OF_MONTH, -2);
 		Date twoDaysAgo = c.getTime();
-		try {
-			String queryExce = "SELECT * FROM users us " + 
-					"WHERE EXISTS (SELECT 1 FROM "+TABLE_NAME+" pt WHERE pt.users_id = us.users_id " + 
-					"AND DATE(pt.created_at) BETWEEN ? AND ? " + 
-					"AND pt.users_id = ?) " + 
-					"AND us.active = 1 LIMIT 1;";
-			PreparedStatement  query = (PreparedStatement) conexion.prepareStatement(queryExce);
+		String queryExce = "SELECT * FROM users us " + 
+				"WHERE EXISTS (SELECT 1 FROM "+TABLE_NAME+" pt WHERE pt.users_id = us.users_id " + 
+				"AND DATE(pt.created_at) BETWEEN ? AND ? " + 
+				"AND pt.users_id = ?) " + 
+				"AND us.active = 1 LIMIT 1;";
+		try (Connection conexion = conn.conectar();
+				PreparedStatement  query = conexion.prepareStatement(queryExce);){
+			
+			
 			query.setString(1, dateFormat.format(twoDaysAgo));
 			query.setString(2, dateFormat.format(now));
 			query.setInt(3, getUsers_id());
 			query.setInt(4, 1);
-			
 			rs = query.executeQuery();
-			conexion.close();
 			if(rs.next()) return true;
 		}catch(SQLException e) {
 			e.getStackTrace();
@@ -78,14 +79,14 @@ public class Post implements Model {
 	
 	public List<Integer> getAllPostUser(){
 		List<Integer> list = new ArrayList<Integer>();
-		Connection conexion = conn.conectar();
 		
-		try {
-			String queryExce = "SELECT DISTINCT(ca.campaings_id) as tareas FROM "+TABLE_NAME+" pt " + 
-					"INNER JOIN campaings ca ON ca.campaings_id = pt.campaings_id " + 
-					"WHERE pt.users_id = ?;";
-	
-		PreparedStatement  query = (PreparedStatement) conexion.prepareStatement(queryExce);
+		String queryExce = "SELECT DISTINCT(ca.campaings_id) as tareas FROM "+TABLE_NAME+" pt " + 
+				"INNER JOIN campaings ca ON ca.campaings_id = pt.campaings_id " + 
+				"WHERE pt.users_id = ?;";
+		try (Connection conexion = conn.conectar();
+				PreparedStatement  query = conexion.prepareStatement(queryExce);){
+			
+		
 		query.setInt(1, getUsers_id());
 		rs = query.executeQuery();
 			
@@ -93,7 +94,6 @@ public class Post implements Model {
 		while(rs.next()) {
 			list.add(rs.getInt("tareas"));
 		}
-		conexion.close();
 		}catch(SQLException e) {
 			e.getStackTrace();
 		}
@@ -123,6 +123,14 @@ public class Post implements Model {
 
 	public void setCampaings_id(int campaings_id) {
 		this.campaings_id = campaings_id;
+	}
+
+	public int getTasks_id() {
+		return tasks_id;
+	}
+
+	public void setTasks_id(int tasks_id) {
+		this.tasks_id = tasks_id;
 	}
 
 	public String getCreated_at() {
