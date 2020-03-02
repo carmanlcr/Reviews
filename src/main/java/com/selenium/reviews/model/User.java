@@ -53,36 +53,34 @@ public class User implements Model {
 		
 		Calendar c = Calendar.getInstance();
 		Date now = c.getTime();
-		c.add(Calendar.DAY_OF_MONTH, -5);
+		c.add(Calendar.DAY_OF_MONTH, -2);
 		Date twoDaysAgo = c.getTime();
-		String queryExce = "SELECT * FROM " + 
-				"(SELECT us.users_id, us.email, us.password,us.active, us.vpn_id, pt.campaings_id FROM users us " + 
-				"LEFT JOIN posts pt ON pt.users_id = us.users_id AND DATE(pt.created_at) BETWEEN ? AND ? " + 
-				"WHERE us.active = 1) us " + 
-				"LEFT JOIN " + 
-				"(SELECT campaings_id FROM reviews.tasks " + 
-				"WHERE date_publication = ? " +
-			    "GROUP BY campaings_id " + 
-				"HAVING count(*) > 0) ta " + 
-				"ON ta.campaings_id = us.campaings_id " + 
-				"WHERE ta.campaings_id is null;";
+		String queryExce = "SELECT u.users_id,u.email,u.password,u.active,u.vpn_id FROM reviews.users u WHERE u.users_id NOT IN " + 
+				"(SELECT p.users_id FROM reviews.posts p WHERE p.campaings_id IN " + 
+				"(SELECT t.campaings_id FROM reviews.tasks t WHERE DATE(t.date_publication) = ? " + 
+				"AND t.campaings_id NOT IN (SELECT t.campaings_id FROM reviews.tasks t " + 
+				"INNER JOIN reviews.posts p ON p.tasks_id = t.tasks_id " + 
+				"WHERE DATE(p.created_at) = ?))) " + 
+				"AND u.users_id NOT IN (SELECT p.users_id FROM reviews.posts p WHERE DATE(p.created_at) >= ?) " + 
+				"AND u.email IS NOT NULL AND u.password IS NOT NULL " +
+				"GROUP BY u.users_id,u.email,u.password,u.active,u.vpn_id;";
 		try (Connection conexion = conn.conectar();
 				PreparedStatement  query = conexion.prepareStatement(queryExce);){
 			
 			
-			query.setString(1, dateFormat.format(twoDaysAgo));
+			query.setString(1, dateFormat.format(now));
 			query.setString(2, dateFormat.format(now));
-			query.setString(3, dateFormat.format(now));
+			query.setString(3, dateFormat.format(twoDaysAgo));
 			
 			rs = query.executeQuery();
 			
 			while(rs.next()) {
 				User u = new User();
-				u.setUsers_id(rs.getInt("us.users_id"));
-				u.setEmail(rs.getString("us.email"));
-				u.setPassword(rs.getString("us.password"));
-				u.setActive(rs.getBoolean("us.active"));
-				u.setVpn_id(rs.getInt("us.vpn_id"));
+				u.setUsers_id(rs.getInt("u.users_id"));
+				u.setEmail(rs.getString("u.email"));
+				u.setPassword(rs.getString("u.password"));
+				u.setActive(rs.getBoolean("u.active"));
+				u.setVpn_id(rs.getInt("u.vpn_id"));
 				listU.add(u);
 			}
 			

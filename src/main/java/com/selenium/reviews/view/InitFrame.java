@@ -21,9 +21,15 @@ import com.selenium.reviews.controller.InicioController;
 import com.selenium.reviews.model.Task;
 import com.selenium.reviews.model.User;
 
+import Controller.SikuliTest;
+
 import javax.swing.JPanel;
 import java.awt.GridLayout;
 import javax.swing.ScrollPaneConstants;
+
+import org.sikuli.script.FindFailed;
+import org.sikuli.script.Screen;
+
 import javax.swing.JButton;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
@@ -48,10 +54,24 @@ public class InitFrame {
 	private List<Task> listTask;
 	private final List<User> listUserSelected = new ArrayList<User>();
 	protected JPanel panel = new JPanel();
+	private static Screen s;
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		final SikuliTest si = new SikuliTest();
+		si.run();
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				s = si.getScreen();
+				
+			}
+		}).start();
+		
+		
+		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -133,7 +153,7 @@ public class InitFrame {
 			}
 		});
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		
 		
 		GroupLayout groupLayout = new GroupLayout(frmInicio.getContentPane());
@@ -198,10 +218,13 @@ public class InitFrame {
 						}
 					}
 					
-					InicioController init = new InicioController(listUserSelected,listTask);
+					InicioController init = new InicioController(listUserSelected,listTask,s);
 					try {
 						init.init();
 					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					} catch (FindFailed e1) {
+						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 				}

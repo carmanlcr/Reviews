@@ -6,6 +6,12 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
+/**
+ * 
+ * @author Luis Morales
+ * @version 1.0.0
+ * @deprecated
+ */
 public class RobotClickController {
 	
 	private static Robot robot;

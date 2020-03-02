@@ -2,7 +2,13 @@ package com.selenium.reviews.controller;
 
 import java.io.IOException;
 
-
+/**
+ * Se movio al proyecto Configurations donde se maneja por comandos
+ * 
+ * @deprecated
+ * @author  Luis Morales
+ *
+ */
 public class VpnController {
 	private static RobotClickController robot;
 	

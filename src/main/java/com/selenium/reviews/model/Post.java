@@ -22,6 +22,7 @@ public class Post implements Model {
 	private int campaings_id;
 	private int tasks_id;
 	private String created_at;
+	private String updated_at;
 	private Date date = new Date();
 	private DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private static Conexion conn = new Conexion();
@@ -30,8 +31,9 @@ public class Post implements Model {
 	ResultSet rs;
 	public void insert() {
 		setCreated_at(dateFormat.format(date));
-		String insert = "INSERT INTO "+TABLE_NAME+"(users_id,campaings_id,tasks_id,created_at) "
-				+ " VALUE (?,?,?,?);";
+		setUpdated_at(dateFormat.format(date));
+		String insert = "INSERT INTO "+TABLE_NAME+"(users_id,campaings_id,tasks_id,created_at,updated_at) "
+				+ " VALUE (?,?,?,?,?);";
 		try (Connection conexion = conn.conectar();
 				PreparedStatement exe = conexion.prepareStatement(insert);){
 			
@@ -40,7 +42,7 @@ public class Post implements Model {
 			exe.setInt(2,getCampaings_id());
 			exe.setInt(3, getTasks_id());
 			exe.setString(4, getCreated_at());
-			
+			exe.setString(5, getUpdated_at());
 			exe.executeUpdate();
 
 		}catch(SQLException e) {
@@ -139,6 +141,14 @@ public class Post implements Model {
 
 	public void setCreated_at(String created_at) {
 		this.created_at = created_at;
+	}
+
+	public String getUpdated_at() {
+		return updated_at;
+	}
+
+	public void setUpdated_at(String updated_at) {
+		this.updated_at = updated_at;
 	}
 
 }

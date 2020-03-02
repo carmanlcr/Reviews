@@ -155,6 +155,7 @@ public class Campaing implements Model {
 		
 		return camp;
 	}
+	
 	public int getCampaings_id() {
 		return campaings_id;
 	}

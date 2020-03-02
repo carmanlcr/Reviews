@@ -8,8 +8,9 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 
-import org.openqa.selenium.ElementClickInterceptedException;
-import org.openqa.selenium.ElementNotInteractableException;
+import org.sikuli.script.FindFailed;
+import org.sikuli.script.Pattern;
+import org.sikuli.script.Screen;
 
 import com.selenium.reviews.model.Campaing;
 import com.selenium.reviews.model.Post;
@@ -17,25 +18,28 @@ import com.selenium.reviews.model.Task;
 import com.selenium.reviews.model.User;
 import com.selenium.reviews.model.Vpn;
 
+import Controller.RobotController;
+import Controller.VpnController;
+
 
 public class InicioController {
 	
+	private final String PAGE = "www.google.com";
+	private final String PATH_IMAGE_SIKULI ="C:\\ImagenesSikuli\\";
 	private List<User> usuarios;
 	private List<Task> tareas;
-	private static DriverController drive = null;
-	private static VpnController vpn = new VpnController();
-	private RobotClickController robot;
-	private boolean banderaVpn = false;
-	
-	public InicioController(List<User> usuarios,List<Task> listTask) {
+	private static VpnController vpn;
+	private RobotController robot;
+	private Screen s;
+	public InicioController(List<User> usuarios,List<Task> listTask, Screen s) {
 		this.usuarios = usuarios;
 		this.tareas = listTask;
+		this.s = s;
 	}
 	
-	public void init() throws InterruptedException {
+	public void init() throws InterruptedException, FindFailed {
 		
 		for(int i = 0; i<tareas.size(); i++) {
-			drive = null;
 			Collections.shuffle(usuarios);
 			for(int j = 0; j<usuarios.size();) {
 				Post post = new Post();
@@ -51,8 +55,9 @@ public class InicioController {
 					String ip = validateIP();
 					Vpn vp = new Vpn();
 					vp.setVpn_id(usuarios.get(j).getVpn_id());
+					vpn = new VpnController(vp.getVpnUser());
 					try {
-						vpn.iniciarVpn(vp.getVpnUser(),banderaVpn);
+						vpn.connectVpn();
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
@@ -65,164 +70,237 @@ public class InicioController {
 						break;
 					//Si el usuario se conecto a la vpn
 					}else {
-						drive = new DriverController();
-						drive.optionsChrome();
-						
-						drive.goPage("https://www.google.com/");
-						
+						robot = new RobotController();
+						try {
+							//Lanzamiento de la pagina   
+							robot.openChromeIncognit();
+						    Thread.sleep(7150);
+						    //Maximizar Chrome
+							robot.maximizar();
+							//Escribir la pagina a ingresar
+							robot.inputWrite(PAGE);
+							//Darle enter parawww ir a la pagina
+							robot.enter();
+							Thread.sleep(12150);
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
 						Thread.sleep(1520);
 						
-						IniciaSesion inicioSesion = new IniciaSesion(drive, usuarios.get(j).getEmail(), usuarios.get(j).getPassword());
+						IniciaSesion inicioSesion = new IniciaSesion(s,robot,usuarios.get(j).getEmail(), usuarios.get(j).getPassword());
 						
-						if(inicioSesion.init()) {
-							if(!validateUserBlock()) {
-								post.setUsers_id(usuarios.get(j).getUsers_id());
-								
-								if(drive.searchElement(1, "/html/body/c-wiz[2]/c-wiz/div/div[1]/div/div/div/div[2]/div[3]/div/div[2]/div") != 0
-									|| drive.searchElement(1, "//*[text()[contains(.,'Confirmar')]]") != 0
-									|| drive.searchElement(1, "//*[text()[contains(.,'Proteger tu cuenta')]]") != 0) {
-									try {
-										drive.clickButton(1, "/html/body/c-wiz[2]/c-wiz/div/div[1]/div/div/div/div[2]/div[3]/div/div[2]/div", "Confirmar");
-									}catch (ElementClickInterceptedException e) {
-										drive.clickButton(1, "//*[text()[contains(.,'Confirmar')]]", "Confirmar");
-									}
+						if(inicioSesion.init()) {								
+							if(s.exists(new Pattern(PATH_IMAGE_SIKULI+"confirm_phone-Google.png").exact()) != null) {
+								try {
+									s.click(new Pattern(PATH_IMAGE_SIKULI+"confirm_phone-Google.png").exact());
+								}catch (IllegalThreadStateException e) {
+									// TODO: handle exception
 								}
-								robot = new RobotClickController();
-								Campaing campa = new Campaing();
-								campa.setCampaings_id(tareas.get(i).getCampaings_id());
-								campa = campa.getCampaing();
-								drive.goPage(campa.getLink());
-								Thread.sleep(1450);
-								if(drive.searchElement(1, "wrl") != 0) {
-									drive.clickButton(1, "wrl", "Escribir una opinion id");
-								}else if(drive.searchElement(1, "//*[text()[contains(.,'Escribe una opinión')]]") != 0) {
-									try {
-										drive.clickButton(1, "//*[text()[contains(.,'Escribe una opinión')]]", "Escribir una opinión text");
-									}catch(ElementNotInteractableException e) {
-										drive.clickButton(1, "/html/body/span/g-lightbox/div[2]/div[3]/span/div/div/div/div[1]/div[1]/div[2]/span[1]/a", "Escribir una opinión xpath");
-									}
+								Thread.sleep(5000);
+							}
+							try {
+								s.click(new Pattern(PATH_IMAGE_SIKULI+"google-com.png").exact());
+							}catch (IllegalThreadStateException e) {
+								// TODO: handle exception
+							}
+							Thread.sleep(456);
+							Campaing campa = new Campaing();
+							campa.setCampaings_id(tareas.get(i).getCampaings_id());
+							campa = campa.getCampaing();
+							robot.inputWrite(campa.getLink());
+							robot.enter();
+							Thread.sleep(12000);
+							
+							
+							if(s.exists(new Pattern(PATH_IMAGE_SIKULI+"opinion_write-Google.png").exact()) != null) {
+								try {
+									s.click(new Pattern(PATH_IMAGE_SIKULI+"opinion_write-Google.png").exact());
+								}catch (IllegalThreadStateException e) {
+									// TODO: handle exception
+								}
+								Thread.sleep(5000);
+								
+								try {
+									s.click(new Pattern(PATH_IMAGE_SIKULI+"share_details-Google.png").exact());	
+								}catch (IllegalThreadStateException e) {
+									// TODO: handle exception
 								}
 								
-
-								Thread.sleep(2540);
-								writePhrase(tareas.get(i).getComentario());
+								Thread.sleep(2000);
+								
+								robot.inputWrite(tareas.get(i).getComentario());
 								
 								Thread.sleep(2500);
+								System.out.println("Seleccionar 5 estrellas");
+
+								robot.pressShiftTabulador();
+								Thread.sleep(450);
+								robot.enter();
 								
-								clickStartAndPublic();
-								
-								Thread.sleep(1490);
-								
-								robot.pressEsc();
-								
-								post.setCampaings_id(tareas.get(i).getCampaings_id());
+								Thread.sleep(3500);
+								try {
+									System.out.println("Pulsar publicar");
+									s.click(new Pattern(PATH_IMAGE_SIKULI+"public-Google.png").exact());
+								}catch (IllegalThreadStateException e) {
+									// TODO: handle exception
+								}
+								post.setCampaings_id(campa.getCampaings_id());
 								post.setTasks_id(tareas.get(i).getTasks_id());
 								post.insert();
-								
-								System.out.println("El usuario publico correctamente");
-								Thread.sleep(2540);
-								
-								//Presionar la tecla escape
+								System.out.println("Post insertado");
+								Thread.sleep(3500);
 								robot.pressEsc();
+								Thread.sleep(1000);
+								robot.pressEsc();
+								Thread.sleep(1000);
 								
-								Thread.sleep(2546);
-									
+								robot.close();
+							}else if(s.exists(new Pattern(PATH_IMAGE_SIKULI+"opinion_write1-Google.png").exact()) != null) {
+								try {
+									s.click(new Pattern(PATH_IMAGE_SIKULI+"opinion_write1-Google.png").exact());
+								}catch (IllegalThreadStateException e) {
+									// TODO: handle exception
+								}
+								Thread.sleep(5000);
+								
+								try {
+									s.click(new Pattern(PATH_IMAGE_SIKULI+"share_details1-Google.png").exact());	
+								}catch (IllegalThreadStateException e) {
+									// TODO: handle exception
+								}
+								
+								Thread.sleep(2000);
+								
+								robot.inputWrite(tareas.get(i).getComentario());
+								
+								Thread.sleep(2500);
+								System.out.println("Seleccionar 5 estrellas");
+
+								robot.pressShiftTabulador();
+								Thread.sleep(450);
+								robot.enter();
+								
+								Thread.sleep(3500);
+								try {
+									System.out.println("Pulsar publicar");
+									s.click(new Pattern(PATH_IMAGE_SIKULI+"public1-Google.png").exact());
+								}catch (IllegalThreadStateException e) {
+									// TODO: handle exception
+								}
+								post.setCampaings_id(campa.getCampaings_id());
+								post.setTasks_id(tareas.get(i).getTasks_id());
+								post.insert();
+								System.out.println("Post insertado");
+								Thread.sleep(3500);
+								robot.pressEsc();
+								Thread.sleep(1000);
+								robot.pressEsc();
+								Thread.sleep(1000);
+								
+								robot.close();
+								
 							}else {
-								i--;
-							}//Fin del if de cuenta bloqueada
+								robot.pressTab();
+								Thread.sleep(880);
+								robot.pressTab();
+								Thread.sleep(880);
+								robot.enter();
+								
+								Thread.sleep(5000);
+								if(s.exists(new Pattern(PATH_IMAGE_SIKULI+"share_details-Google.png").exact()) != null) {
+									try {
+										s.click(new Pattern(PATH_IMAGE_SIKULI+"share_details-Google.png").exact());	
+									}catch (IllegalThreadStateException e) {
+									}
+									
+									Thread.sleep(2000);
+									
+									robot.inputWrite(tareas.get(i).getComentario());
+									
+									Thread.sleep(2500);
+									System.out.println("Seleccionar 5 estrellas");
+
+									robot.pressShiftTabulador();
+									Thread.sleep(450);
+									robot.enter();
+									
+									Thread.sleep(3500);
+									try {
+										System.out.println("Pulsar publicar");
+										s.click(new Pattern(PATH_IMAGE_SIKULI+"public-Google.png").exact());
+									}catch (IllegalThreadStateException e) {
+										// TODO: handle exception
+									}
+									post.setCampaings_id(campa.getCampaings_id());
+									post.setTasks_id(tareas.get(i).getTasks_id());
+									post.insert();
+									System.out.println("Post insertado");
+									Thread.sleep(3500);
+									robot.pressEsc();
+									Thread.sleep(1000);
+									robot.pressEsc();
+									Thread.sleep(1000);
+									
+									robot.close();
+								}else if(s.exists(new Pattern(PATH_IMAGE_SIKULI+"share_details1-Google.png").exact()) != null) {
+									try {
+										s.click(new Pattern(PATH_IMAGE_SIKULI+"share_details1-Google.png").exact());	
+									}catch (IllegalThreadStateException e) {
+									}
+									
+									Thread.sleep(2000);
+									
+									robot.inputWrite(tareas.get(i).getComentario());
+									
+									Thread.sleep(2500);
+									System.out.println("Seleccionar 5 estrellas");
+
+									robot.pressShiftTabulador();
+									Thread.sleep(450);
+									robot.enter();
+									
+									Thread.sleep(3500);
+									try {
+										System.out.println("Pulsar publicar");
+										s.click(new Pattern(PATH_IMAGE_SIKULI+"public1-Google.png").exact());
+									}catch (IllegalThreadStateException e) {
+										// TODO: handle exception
+									}
+									post.setCampaings_id(campa.getCampaings_id());
+									post.setTasks_id(tareas.get(i).getTasks_id());
+									post.insert();
+									System.out.println("Post insertado");
+									Thread.sleep(3500);
+									robot.pressEsc();
+									Thread.sleep(1000);
+									robot.pressEsc();
+									Thread.sleep(1000);
+									
+									robot.close();
+								}else {
+									System.out.println("No hay donde publicar para este usuario");
+								}
+							}
 								
 						}else {
 							System.out.println("El usuario "+usuarios.get(j).getEmail()+" tiene error de usuario o contraseña");
 							i--;
 						}//Fin del if usuario o contraseña correcto o incorrecto
-							
-						}//La cuenta no es correcta
+								
+					}
 						
 						
-					}//Fin del If VPN
-					if(drive != null) {
-						drive.quit();
-					}
-					try {
-						vpn.desconectVpn();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					banderaVpn = true;
-					usuarios.remove(j);
-					break;
+				}//Fin del If VPN
+				vpn.disconnectVpn();
+				usuarios.remove(j);
+				break;
 				}//Fin del for usuarios 
 			}//Fin del for Campañas
-		System.out.println("Todas las publicaciones se hicieron correctamente");
+		System.out.println("Finalizo el programa");
 		}//Fin de la funcion
+
 	
-	private boolean validateUserBlock() {
-		if(drive.searchElement(1, "//*[text()[contains(.,'Verifica tu identidad')]]") != 0) {
-			System.out.println("Usuario bloqueado");
-			return true;
-		}else if(drive.searchElement(1, "//*[text()[contains(.,'Verifica que eres tú')]]") != 0) {
-			System.out.println("Usuario pide verificación");
-			return true;
-		}
-		return false;
-	}
-	private void writePhrase(String frase) throws InterruptedException {
-		robot.dimensions(450, 530);
-		Thread.sleep(2303);
-		robot.clickPressed();
-		robot.copy(frase);
-		Thread.sleep(235);
-		robot.paste();
-		
-		
-	}
 	
-	private void clickStartAndPublic() throws InterruptedException {
-		robot.dimensions(590, 420);
-		
-		Thread.sleep(1490);
-		
-		robot.clickPressed();
-		
-		Thread.sleep(2540);
-		if(drive.searchElement(1, "//*[text()[contains(.,'Publicar')]]") != 0) {
-			drive.clickButton(1, "//*[text()[contains(.,'Publicar')]]", "Click boton de publicar");
-		}else if(drive.searchElement(1, "/html/body/div/div/jsl/div/div[2]/div[3]/div[2]/div[2]/div") != 0) {
-			drive.clickButton(1, "/html/body/div/div/jsl/div/div[2]/div[3]/div[2]/div[2]/div", "Click boton de publicar xpath");
-		}else {
-			robot.dimensions(859, 789);
-			Thread.sleep(145);
-			robot.clickPressed();
-		}
-		
-		
-		
-		Thread.sleep(2650);
-		
-		
-	}
-	
-	/*private void cerrarSesion() throws InterruptedException {
-		if(drive.searchElement(1, "//*[text()[contains(.,'Revisar la actividad ahora')]]") != 0) {
-			drive.clickButton(1, "/html/body/div[3]/div[1]/div/div[1]/div[2]/div/a", "Seleccionar el usuario xpath");
-		}else {
-			drive.clickButton(1, "/html/body/div[4]/div[1]/div/div[1]/div[2]/div/a", "Seleccionar el usuario xpath");
-		}
-		
-		Thread.sleep(2546);
-		
-		
-		if(drive.searchElement(1, "//*[text()[contains(.,'Salir')]]") != 0) {
-			drive.clickButton(1, "//*[text()[contains(.,'Salir')]]", "Salir text");
-		}else {
-			if(drive.searchElement(1, "//*[text()[contains(.,'Revisar la actividad ahora')]]") != 0) {
-				drive.clickButton(1, "/html/body/div[4]/div[1]/div/div[3]/div[4]/a", "Cerrar sesion 1 xpath");
-			}else {
-				drive.clickButton(1, "/html/body/div[3]/div[1]/div/div[3]/div[4]/a", "Cerrar sesion 2 xpath");
-			}
-			
-		}
-	}*/
 	
 	private String validateIP() {
 

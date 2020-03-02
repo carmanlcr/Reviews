@@ -8,7 +8,9 @@ import org.openqa.selenium.chrome.ChromeOptions;
 /**
  * 
  * Clase donde se maneja todas las interaciones con el navegador
+ * Se dejo de usar Selenium para usar la clase Robot de Java
  * 
+ * @deprecated
  * @author Usuario
  * @vesion 1.0.0
  */
